@@ -7,9 +7,13 @@ import javax.persistence.Id;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Entity
 public class Employe {
+
+    private static Logger logger = LoggerFactory.getLogger(Employe.class);
 
 
     @Id
@@ -117,8 +121,40 @@ public class Employe {
         return prime * this.tempsPartiel;
     }
 
-    //Augmenter salaire
-    //public void augmenterSalaire(double pourcentage){}
+    /**
+     * Calcul d'une augmentation de salaire selon la règle :
+     * Pour tous les employés, determination d'un pourcentage d'augmentation :
+     * arrondi(pourcentage dû * son salaire) + son salaire
+     *
+     * L'augmentation d'un salaire ne peut etre inferieur au salaire de base
+     *
+     * @param pourcentage correspondant au pourcentage d'augmentation attribué a l'employé
+     *
+     * @return l'augmentation de salaire de l'employé
+     */
+    public Double augmenterSalaire(Double pourcentage){
+
+        // Un salaire ne peut etre inferieur au salaire de base
+        if (this.salaire == null || salaire <= Entreprise.SALAIRE_BASE){
+            salaire = Entreprise.SALAIRE_BASE;
+            logger.warn("Salaire inferieur au salaire de base, attribution du salaire de base");
+        }
+        //On verifie si le pourcentage n'est pas null
+        if (pourcentage == null){
+            pourcentage = 0.0;
+            logger.warn("pourcentage incorect, attribution d'un pourcentage neutre");
+        }
+
+        //Si le pourcentage est inferieur a 0 l'augmentation est négligable
+        if (pourcentage < 0.0 ){
+            pourcentage = 0.0;
+            logger.warn("pourcentage incorect, attribution d'un pourcentage neutre");
+
+        }
+        logger.info("Le salaire a été augmenté de {} %", pourcentage);
+        return Math.round((pourcentage/100) * salaire) + salaire;
+
+    }
 
     public Long getId() {
         return id;
