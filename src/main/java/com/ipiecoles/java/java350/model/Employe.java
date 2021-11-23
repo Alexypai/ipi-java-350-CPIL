@@ -50,7 +50,7 @@ public class Employe {
     public Integer getNombreAnneeAnciennete() {
 
         if(this.dateEmbauche == null || dateEmbauche.isAfter(LocalDate.now())){
-            return null;
+
         }
         return LocalDate.now().getYear() - dateEmbauche.getYear();
     }
@@ -63,6 +63,10 @@ public class Employe {
         return getNbRtt(LocalDate.now());
     }
 
+    /**
+     * @param d Correspond a une année bissextile
+     * @return le nombre de RTT d'un employé
+     */
     public Integer getNbRtt(LocalDate d){
         int i1 = d.isLeapYear() ? 365 : 366;int var = 104;
         switch (LocalDate.of(d.getYear(),1,1).getDayOfWeek()){
