@@ -23,13 +23,13 @@ class EmployeTest {
     }
 
     @Test
-    public void testGetAnneeAcienneteDateEmbaucheInfNow(){
+    public void testGetAnneeAcienneteDateEmbaucheInfNow() {
         //GIVEN
-        Employe employe = new Employe("Doe","Jonh","T12345", LocalDate.now().minusYears(6),1500d,1,1.0);
+        Employe employe = new Employe("Doe", "Jonh", "T12345", LocalDate.now().minusYears(6), 1500d, 1, 1.0);
         // WHEN
         Integer anneeAnciennete = employe.getNombreAnneeAnciennete();
         //THEN
-        Assertions.assertThat(anneeAnciennete).isGreaterThanOrEqualTo(6);
+        Assertions.assertThat(anneeAnciennete).isEqualTo(6);
     }
 
     @Test
