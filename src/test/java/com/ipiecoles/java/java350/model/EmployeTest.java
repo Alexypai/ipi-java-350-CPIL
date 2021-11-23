@@ -11,8 +11,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EmployeTest {
 
+/**  TEST sur méthode GetAnciennete*/
+
     @Test
-    public void testGetAnneeAcienneteDateEmbaucheNull(){
+    public void testGetAnneeAncienneteDateEmbaucheNull(){
         //GIVEN
         Employe employe = new Employe();
         employe.setDateEmbauche(null);
@@ -23,7 +25,7 @@ class EmployeTest {
     }
 
     @Test
-    public void testGetAnneeAcienneteDateEmbaucheInfNow() {
+    public void testGetAnneeAncienneteDateEmbaucheInfNow() {
         //GIVEN
         Employe employe = new Employe("Doe", "Jonh", "T12345", LocalDate.now().minusYears(6), 1500d, 1, 1.0);
         // WHEN
@@ -33,7 +35,7 @@ class EmployeTest {
     }
 
     @Test
-    public void testGetAnneeAcienneteDateEmbaucheSupNow(){
+    public void testGetAnneeAncienneteDateEmbaucheSupNow(){
         //GIVEN
         Employe employe = new Employe("Doe","Jonh","T12345", LocalDate.now().plusYears(6),1500d,1,1.0);
         // WHEN
@@ -41,6 +43,8 @@ class EmployeTest {
         //THEN
         Assertions.assertThat(anneeAnciennete).isNull();
     }
+
+    /**  TEST sur méthode GetPrimeAnnuelle */
 
     @ParameterizedTest(name = "Perf{0}, matricule {1} txActivite{2}, anciennete {3} => prime {4} ")
     @CsvSource({"1,'T12345',1.0,0,1000.0",
@@ -72,6 +76,9 @@ class EmployeTest {
         Assertions.assertThat(prime).isEqualTo(1000.0);
     }
 
+    /**  TEST sur méthode AugmenterSalaire */
+
+
     @ParameterizedTest(name = "pourcentage{0}, salaire {1}, NewSalaire{2}")
     @CsvSource({"10,'1500d',1673.22",
             "-10,'1700d',1700",
@@ -83,7 +90,7 @@ class EmployeTest {
             "0.0,'1500d',1521.22",
             "0.00001,'1700d',1700",
             "0,'1700d',1700"})
-    public void testAaugmenterSalairePourcentageManyValue(Double pourcentage,Double salaire,Double NewSalaire){
+    public void testAugmenterSalairePourcentageManyValue(Double pourcentage,Double salaire,Double NewSalaire){
         //GIVEN
         Employe employe = new Employe("Doe","John",null,LocalDate.now(),salaire,1,1.0);
         //WHEN
@@ -93,7 +100,7 @@ class EmployeTest {
     }
 
     @Test
-    public void testAaugmenterSalairePourcentageNull(){
+    public void testAugmenterSalairePourcentageNull(){
         //GIVEN
         Employe employe = new Employe("Doe","John",null,LocalDate.now(),1700d,1,1.0);
         Double pourcentage = null;
