@@ -114,22 +114,22 @@ public class EmployeService {
         //Cas 2
         if (caTraite >= objectifCa * 0.8 && caTraite < objectifCa * 0.95) {
             performance = Math.max(Entreprise.PERFORMANCE_BASE, employe.getPerformance() - 2);
-            logger.info("performance de {} descendu de 2points", employe.toString());
+            logger.info("performance de {} descendu de 2points", employe.getMatricule());
         }
         //Cas 3
         else if (caTraite >= objectifCa * 0.95 && caTraite <= objectifCa * 1.05) {
             performance = Math.max(Entreprise.PERFORMANCE_BASE, employe.getPerformance());
-            logger.info("la performance de {} reste stable ", employe.toString());
+            logger.info("la performance de {} reste stable ", employe.getMatricule());
         }
         //Cas 4
         else if (caTraite <= objectifCa * 1.2 && caTraite > objectifCa * 1.05) {
             performance = employe.getPerformance() + 1;
-            logger.info("performance de {} augmenter de 1 points", employe.toString());
+            logger.info("performance de {} augmenter de 1 points", employe.getMatricule());
         }
         //Cas 5
         else if (caTraite > objectifCa * 1.2) {
             performance = employe.getPerformance() + 4;
-            logger.info("performance de {} augmenter de 4 points", employe.toString());
+            logger.info("performance de {} augmenter de 4 points", employe.getMatricule());
         }
         //Si autre cas, on reste à la performance de base.
 
@@ -139,7 +139,7 @@ public class EmployeService {
         Double performanceMoyenne = employeRepository.avgPerformanceWhereMatriculeStartsWith("C");
         if (performanceMoyenne != null && performance > performanceMoyenne) {
             performance++;
-            logger.info("performance de {} est augmentée d'un point car sa performance est superieur a la moyenne", employe.toString());
+            logger.info("performance de {} est augmentée d'un point car sa performance est superieur a la moyenne", employe.getMatricule());
         }
 
 

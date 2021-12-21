@@ -49,11 +49,12 @@ public class Employe {
 
     /**
      * Méthode calculant le nombre d'années d'ancienneté à partir de la date d'embauche
+     *
      * @return
      */
     public Integer getNombreAnneeAnciennete() {
 
-        if(this.dateEmbauche == null || dateEmbauche.isAfter(LocalDate.now())){
+        if (this.dateEmbauche == null || dateEmbauche.isAfter(LocalDate.now())) {
             return null;
         }
         return LocalDate.now().getYear() - dateEmbauche.getYear();
@@ -61,10 +62,6 @@ public class Employe {
 
     public Integer getNbConges() {
         return Entreprise.NB_CONGES_BASE + this.getNombreAnneeAnciennete();
-    }
-
-    public Integer getNbRtt(){
-        return getNbRtt(LocalDate.now());
     }
 
     /**
@@ -88,22 +85,21 @@ public class Employe {
             case THURSDAY:
                 if (dateReference.isLeapYear()) {
                     nbSamediDimanche = nbSamediDimanche + 1;
-                }else{
+                } else {
                     nbSamediDimanche = 104;
                 }
                 break;
             case FRIDAY:
                 if (dateReference.isLeapYear()) {
                     nbSamediDimanche = nbSamediDimanche + 2;
-                }
-                else {
+                } else {
                     nbSamediDimanche = nbSamediDimanche + 1;
                 }
                 break;
             case SATURDAY:
                 nbSamediDimanche = nbSamediDimanche + 1;
                 break;
-            default :
+            default:
                 nbSamediDimanche = 104;
                 break;
         }
@@ -124,24 +120,24 @@ public class Employe {
      * Pour les autres employés, la prime de base plus éventuellement la prime de performance calculée si l'employé
      * n'a pas la performance de base, en multipliant la prime de base par un l'indice de performance
      * (égal à la performance à laquelle on ajoute l'indice de prime de base)
-     *
+     * <p>
      * Pour tous les employés, une prime supplémentaire d'ancienneté est ajoutée en multipliant le nombre d'année
      * d'ancienneté avec la prime d'ancienneté. La prime est calculée au pro rata du temps de travail de l'employé
      *
      * @return la prime annuelle de l'employé en Euros et cents
      */
     //Matricule, performance, date d'embauche, temps partiel, prime
-    public Double getPrimeAnnuelle(){
+    public Double getPrimeAnnuelle() {
         //Calcule de la prime d'ancienneté
         Double primeAnciennete = Entreprise.PRIME_ANCIENNETE * this.getNombreAnneeAnciennete();
         Double prime;
         //Prime du manager (matricule commençant par M) : Prime annuelle de base multipliée par l'indice prime manager
         //plus la prime d'anciennté.
-        if(matricule != null && matricule.startsWith("M")) {
+        if (matricule != null && matricule.startsWith("M")) {
             prime = Entreprise.primeAnnuelleBase() * Entreprise.INDICE_PRIME_MANAGER + primeAnciennete;
         }
         //Pour les autres employés en performance de base, uniquement la prime annuelle plus la prime d'ancienneté.
-        else if (this.performance == null || Entreprise.PERFORMANCE_BASE.equals(this.performance)){
+        else if (this.performance == null || Entreprise.PERFORMANCE_BASE.equals(this.performance)) {
             prime = Entreprise.primeAnnuelleBase() + primeAnciennete;
         }
         //Pour les employés plus performance, on bonnifie la prime de base en multipliant par la performance de l'employé
@@ -157,34 +153,33 @@ public class Employe {
      * Calcul d'une augmentation de salaire selon la règle :
      * Pour tous les employés, determination d'un pourcentage d'augmentation :
      * arrondi(pourcentage dû * son salaire) + son salaire
-     *
+     * <p>
      * L'augmentation d'un salaire ne peut etre inferieur au salaire de base
      *
      * @param pourcentage correspondant au pourcentage d'augmentation attribué a l'employé
-     *
      * @return l'augmentation de salaire de l'employé
      */
-    public Double augmenterSalaire(Double pourcentage){
+    public Double augmenterSalaire(Double pourcentage) {
 
         // Un salaire ne peut etre inferieur au salaire de base
-        if (this.salaire == null || salaire <= Entreprise.SALAIRE_BASE){
+        if (this.salaire == null || salaire <= Entreprise.SALAIRE_BASE) {
             salaire = Entreprise.SALAIRE_BASE;
             logger.warn("Salaire inferieur au salaire de base, attribution du salaire de base");
         }
         //On verifie si le pourcentage n'est pas null
-        if (pourcentage == null){
+        if (pourcentage == null) {
             pourcentage = 0.0;
             logger.warn("pourcentage incorect, attribution d'un pourcentage neutre");
         }
 
         //Si le pourcentage est inferieur a 0 l'augmentation est négligable
-        if (pourcentage < 0.0 ){
+        if (pourcentage < 0.0) {
             pourcentage = 0.0;
             logger.warn("pourcentage incorect, attribution d'un pourcentage neutre");
 
         }
         logger.info("Le salaire a été augmenté de {} %", pourcentage);
-        return Math.round((pourcentage/100) * salaire) + salaire;
+        return Math.round((pourcentage / 100) * salaire) + salaire;
 
     }
 
@@ -284,21 +279,16 @@ public class Employe {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Employe)) return false;
-        Employe employe = (Employe) o;
-        return Objects.equals(id, employe.id) &&
-                Objects.equals(nom, employe.nom) &&
-                Objects.equals(prenom, employe.prenom) &&
-                Objects.equals(matricule, employe.matricule) &&
-                Objects.equals(dateEmbauche, employe.dateEmbauche) &&
-                Objects.equals(salaire, employe.salaire) &&
-                Objects.equals(performance, employe.performance);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, nom, prenom, matricule, dateEmbauche, salaire, performance);
+    public String toString() {
+        return "Employe{" +
+                "id=" + id +
+                ", nom='" + nom + '\'' +
+                ", prenom='" + prenom + '\'' +
+                ", matricule='" + matricule + '\'' +
+                ", dateEmbauche=" + dateEmbauche +
+                ", salaire=" + salaire +
+                ", performance=" + performance +
+                ", tempsPartiel=" + tempsPartiel +
+                '}';
     }
 }
