@@ -109,4 +109,32 @@ class EmployeTest {
         //THEN
         Assertions.assertThat(NewSalaire).isEqualTo(1700d);
     }
+
+    @ParameterizedTest(name = "dateReference{0},rtt{1}")
+    @CsvSource({"2016-01-01,9",
+            "2019-01-01,8",
+            "2021-01-01,10",
+            "2022-01-01,10",
+            "2026-01-01,9",
+            "2032-01-01,11"})
+    public void testGetNbrRtt(LocalDate dateReference, int rtt){
+        //GIVEN
+        Employe employe = new Employe("Doe","John",null,LocalDate.now(),1500d,1,1.0);
+        //WHEN
+        //Double SalaireAttendu = employe.augmenterSalaire(pourcentage);
+        int nbRtt = employe.getNbRtt(dateReference);
+        //THEN
+        Assertions.assertThat(nbRtt).isEqualTo(rtt);
+
+    }
+
+    @Test
+    public void getNbConges(){
+        //GIVEN
+        Employe employe = new Employe("Doe","John",null,LocalDate.now(),null,1,1.0);
+        //WHEN
+        Integer conges = employe.getNbConges();
+        //THEN
+        Assertions.assertThat(conges).isEqualTo(25);
+    }
 }
