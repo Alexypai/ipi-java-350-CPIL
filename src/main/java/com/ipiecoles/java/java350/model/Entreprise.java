@@ -29,6 +29,7 @@ public final class Entreprise {
         COEFF_SALAIRE_ETUDES.put(NiveauEtude.INGENIEUR, 1.6);
         COEFF_SALAIRE_ETUDES.put(NiveauEtude.DOCTORAT, 1.7);
 
+        datePaque.put(2016, LocalDate.of(2016, 3, 27));
         datePaque.put(2019, LocalDate.of(2019, 4, 21));
         datePaque.put(2020, LocalDate.of(2020, 4, 12));
         datePaque.put(2021, LocalDate.of(2021, 4, 4));

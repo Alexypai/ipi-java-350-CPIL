@@ -6,10 +6,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Entity
 public class Employe {
+
+    private static Logger logger = LoggerFactory.getLogger(Employe.class);
 
 
     @Id
@@ -45,11 +48,12 @@ public class Employe {
 
     /**
      * Méthode calculant le nombre d'années d'ancienneté à partir de la date d'embauche
+     *
      * @return
      */
     public Integer getNombreAnneeAnciennete() {
 
-        if(this.dateEmbauche == null || dateEmbauche.isAfter(LocalDate.now())){
+        if (this.dateEmbauche == null || dateEmbauche.isAfter(LocalDate.now())) {
             return null;
         }
         return LocalDate.now().getYear() - dateEmbauche.getYear();
@@ -59,23 +63,54 @@ public class Employe {
         return Entreprise.NB_CONGES_BASE + this.getNombreAnneeAnciennete();
     }
 
-    public Integer getNbRtt(){
-        return getNbRtt(LocalDate.now());
-    }
-
-    public Integer getNbRtt(LocalDate d){
-        int i1 = d.isLeapYear() ? 365 : 366;int var = 104;
-        switch (LocalDate.of(d.getYear(),1,1).getDayOfWeek()){
-            case THURSDAY: if(d.isLeapYear()) var =  var + 1; break;
+    /**
+     * Méthode permettant de calculer le nombre de jour de RTT dans l'année (au pro-rata du taux d'activité de l'employé)
+     * selon la formule :
+     * Nb jours RTT =
+     * Nombre de jours dans l'année
+     * - Nombre de jours travaillés dans l'année en plein temps
+     * - Nombre de samedi et dimanche dans l'année
+     * - Nombre de jours fériés ne tombant pas le week-end
+     * - Nombre de congés payés
+     *
+     * @param dateReference la date à laquelle on va calculer le nombre de RTT pour l'année
+     * @return Nombre de jours de RTT pour l'employé l'année de la date de référence
+     * au prorata du temps d'activité
+     */
+    public Integer getNbRtt(LocalDate dateReference) {
+        int nbJoursAnnee = dateReference.isLeapYear() ? 366 : 365;
+        int nbSamediDimanche = 104;
+        switch (LocalDate.of(dateReference.getYear(), 1, 1).getDayOfWeek()) {
+            case THURSDAY:
+                if (dateReference.isLeapYear()) {
+                    nbSamediDimanche = nbSamediDimanche + 1;
+                } else {
+                    nbSamediDimanche = 104;
+                }
+                break;
             case FRIDAY:
-                if(d.isLeapYear()) var =  var + 2;
-                else var =  var + 1;
-            case SATURDAY:var = var + 1;
+                if (dateReference.isLeapYear()) {
+                    nbSamediDimanche = nbSamediDimanche + 2;
+                } else {
+                    nbSamediDimanche = nbSamediDimanche + 1;
+                }
+                break;
+            case SATURDAY:
+                nbSamediDimanche = nbSamediDimanche + 1;
+                break;
+            default:
+                nbSamediDimanche = 104;
                 break;
         }
-        int monInt = (int) Entreprise.joursFeries(d).stream().filter(localDate ->
+        int nbJoursFeriesSemaine = (int) Entreprise.joursFeries(dateReference).stream().filter(localDate ->
                 localDate.getDayOfWeek().getValue() <= DayOfWeek.FRIDAY.getValue()).count();
-        return (int) Math.ceil((i1 - Entreprise.NB_JOURS_MAX_FORFAIT - var - Entreprise.NB_CONGES_BASE - monInt) * tempsPartiel);
+        return (int) Math.ceil((
+                nbJoursAnnee
+                        - Entreprise.NB_JOURS_MAX_FORFAIT
+                        - nbSamediDimanche
+                        - Entreprise.NB_CONGES_BASE
+                        - nbJoursFeriesSemaine
+        ) * tempsPartiel);
     }
 
     /**
@@ -84,24 +119,24 @@ public class Employe {
      * Pour les autres employés, la prime de base plus éventuellement la prime de performance calculée si l'employé
      * n'a pas la performance de base, en multipliant la prime de base par un l'indice de performance
      * (égal à la performance à laquelle on ajoute l'indice de prime de base)
-     *
+     * <p>
      * Pour tous les employés, une prime supplémentaire d'ancienneté est ajoutée en multipliant le nombre d'année
      * d'ancienneté avec la prime d'ancienneté. La prime est calculée au pro rata du temps de travail de l'employé
      *
      * @return la prime annuelle de l'employé en Euros et cents
      */
     //Matricule, performance, date d'embauche, temps partiel, prime
-    public Double getPrimeAnnuelle(){
+    public Double getPrimeAnnuelle() {
         //Calcule de la prime d'ancienneté
         Double primeAnciennete = Entreprise.PRIME_ANCIENNETE * this.getNombreAnneeAnciennete();
         Double prime;
         //Prime du manager (matricule commençant par M) : Prime annuelle de base multipliée par l'indice prime manager
         //plus la prime d'anciennté.
-        if(matricule != null && matricule.startsWith("M")) {
+        if (matricule != null && matricule.startsWith("M")) {
             prime = Entreprise.primeAnnuelleBase() * Entreprise.INDICE_PRIME_MANAGER + primeAnciennete;
         }
         //Pour les autres employés en performance de base, uniquement la prime annuelle plus la prime d'ancienneté.
-        else if (this.performance == null || Entreprise.PERFORMANCE_BASE.equals(this.performance)){
+        else if (this.performance == null || Entreprise.PERFORMANCE_BASE.equals(this.performance)) {
             prime = Entreprise.primeAnnuelleBase() + primeAnciennete;
         }
         //Pour les employés plus performance, on bonnifie la prime de base en multipliant par la performance de l'employé
@@ -113,8 +148,39 @@ public class Employe {
         return prime * this.tempsPartiel;
     }
 
-    //Augmenter salaire
-    //public void augmenterSalaire(double pourcentage){}
+    /**
+     * Calcul d'une augmentation de salaire selon la règle :
+     * Pour tous les employés, determination d'un pourcentage d'augmentation :
+     * arrondi(pourcentage dû * son salaire) + son salaire
+     * <p>
+     * L'augmentation d'un salaire ne peut etre inferieur au salaire de base
+     *
+     * @param pourcentage correspondant au pourcentage d'augmentation attribué a l'employé
+     * @return l'augmentation de salaire de l'employé
+     */
+    public Double augmenterSalaire(Double pourcentage) {
+
+        // Un salaire ne peut etre inferieur au salaire de base
+        if (this.salaire == null || salaire <= Entreprise.SALAIRE_BASE) {
+            salaire = Entreprise.SALAIRE_BASE;
+            logger.warn("Salaire inferieur au salaire de base, attribution du salaire de base");
+        }
+        //On verifie si le pourcentage n'est pas null
+        if (pourcentage == null) {
+            pourcentage = 0.0;
+            logger.warn("pourcentage incorect, attribution d'un pourcentage neutre");
+        }
+
+        //Si le pourcentage est inferieur a 0 l'augmentation est négligable
+        if (pourcentage < 0.0) {
+            pourcentage = 0.0;
+            logger.warn("pourcentage incorect, attribution d'un pourcentage neutre");
+
+        }
+        logger.info("Le salaire a été augmenté de {} %", pourcentage);
+        return Math.round((pourcentage / 100) * salaire) + salaire;
+
+    }
 
     public Long getId() {
         return id;
@@ -211,22 +277,4 @@ public class Employe {
         this.tempsPartiel = tempsPartiel;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Employe)) return false;
-        Employe employe = (Employe) o;
-        return Objects.equals(id, employe.id) &&
-                Objects.equals(nom, employe.nom) &&
-                Objects.equals(prenom, employe.prenom) &&
-                Objects.equals(matricule, employe.matricule) &&
-                Objects.equals(dateEmbauche, employe.dateEmbauche) &&
-                Objects.equals(salaire, employe.salaire) &&
-                Objects.equals(performance, employe.performance);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, nom, prenom, matricule, dateEmbauche, salaire, performance);
-    }
 }
